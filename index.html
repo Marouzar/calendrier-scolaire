@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Calendrier Scolaire</title>
+
+<style>
+.month {
+    margin: 18px;
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.month-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.week-header {
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    font-size: 10px;
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    gap: 2px;
+}
+
+.cell {
+    min-height: 70px;
+    border: 1px solid #eee;
+    font-size: 9px;
+    padding: 3px;
+    overflow: hidden;
+}
+
+.day {
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.evt {
+    font-size: 10px;
+    line-height: 1.1;
+}
+
+.weekend { background: #f5f5f5; }
+.holiday { background: #ffeaa7; }
+.exam { background: #ffb3b3; }
+.event { background: #cfe8ff; }
+
+</style>
+
+</head>
+
+<body>
+
+<h2 style="text-align:center;">Calendrier Scolaire 2026–2027</h2>
+
+<div id="app"></div>
+
+<script>
+fetch("http://127.0.0.1:5000/api/calendar")
+.then(r => r.json())
+.then(data => {
+
+    const app = document.getElementById("app");
+
+    const MONTHS = [
+        "Janvier","Février","Mars","Avril","Mai","Juin",
+        "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+    ];
+
+    const WEEKDAYS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+    function pad(n){ return String(n).padStart(2,"0"); }
+
+    function iso(y,m,d){
+        return y + "-" + pad(m) + "-" + pad(d);
+    }
+
+    function buildCell(dateObj, events, weekend){
+
+        let cls = "cell";
+        if (weekend) cls += " weekend";
+
+        let html = `<div class="day">${dateObj.getDate()}</div>`;
+
+        if(events && events.length){
+
+            for(let i=0;i<Math.min(events.length,2);i++){
+
+                let e = events[i];
+
+                let low = e.toLowerCase();
+
+                if(low.includes("vacances")) cls += " holiday";
+                else if(low.includes("exam") || low.includes("bac")) cls += " exam";
+                else cls += " event";
+
+                let short = e.length > 26 ? e.slice(0,26)+"…" : e;
+
+                html += `<div class="evt">• ${short}</div>`;
+            }
+        }
+
+        return `<div class="${cls}">${html}</div>`;
+    }
+
+    function buildMonth(year, month){
+
+        let wrap = document.createElement("div");
+        wrap.className = "month";
+
+        // MONTH HEADER (SMALL + CLEAN LIKE PRONOTE)
+        let title = document.createElement("div");
+        title.className = "month-title";
+        title.innerText = MONTHS[month-1] + " " + year;
+        wrap.appendChild(title);
+
+        // WEEK HEADER (IMPORTANT FIX YOU MISSED)
+        let header = document.createElement("div");
+        header.className = "week-header";
+
+        WEEKDAYS.forEach(d=>{
+            let div = document.createElement("div");
+            div.innerText = d;
+            header.appendChild(div);
+        });
+
+        wrap.appendChild(header);
+
+        let grid = document.createElement("div");
+        grid.className = "grid";
+
+        let first = new Date(year, month-1, 1);
+        let offset = (first.getDay()===0?6:first.getDay()-1);
+
+        for(let i=0;i<offset;i++){
+            grid.innerHTML += `<div></div>`;
+        }
+
+        let days = new Date(year, month, 0).getDate();
+
+        for(let d=1; d<=days; d++){
+
+            let dt = new Date(year, month-1, d);
+            let key = iso(year, month, d);
+
+            let ev = data[key] || [];
+            let weekend = dt.getDay()===0 || dt.getDay()===6;
+
+            grid.innerHTML += buildCell(dt, ev, weekend);
+        }
+
+        wrap.appendChild(grid);
+        return wrap;
+    }
+
+    // FULL YEAR ORDER (NO SHIFT BUG EVER)
+    const order = [7,8,9,10,11,12,1,2,3,4,5,6,7];
+
+    for(let m of order){
+
+        let y = (m>=7)?2026:2027;
+
+        app.appendChild(buildMonth(y,m));
+    }
+
+});
+</script>
+</body>
+</html>
