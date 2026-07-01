@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Calendrier Scolaire</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f4f4;
+    margin: 0;
+}
+
+#app {
+    padding: 20px;
+}
+
+.month {
+    background: white;
+    margin: 20px auto;
+    max-width: 1100px;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.month-title {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    color: #666;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7,1fr);
+    gap: 2px;
+}
+
+.cell {
+    min-height: 80px;
+    border: 1px solid #eee;
+    padding: 4px;
+    font-size: 10px;
+    overflow: hidden;
+}
+
+.day {
+    font-weight: bold;
+}
+
+.weekend { background: #f0f0f0; }
+.holiday { background: #ffeaa7; }
+.exam { background: #ffcccc; }
+.event { background: #d0e7ff; }
+</style>
+</head>
+
+<body>
+
+<div id="app">Chargement...</div>
+
+<script>
+
+const API_KEY = "AIzaSyD1YQdsRV9Kw5GYhbe56fanie1heFmCKXU";
+const CALENDAR_ID = "communication@lfijc.org";
+
+const MONTHS = [
+"Janvier","Février","Mars","Avril","Mai","Juin",
+"Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+];
+
+const WEEKDAYS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+function pad(n){ return String(n).padStart(2,"0"); }
+
+function iso(y,m,d){
+    return `${y}-${pad(m)}-${pad(d)}`;
+}
+
+// FETCH GOOGLE CALENDAR DIRECTLY
+async function fetchCalendar(){
+
+    const url =
+`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${API_KEY}&singleEvents=true&orderBy=startTime&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const map = {};
+
+    for(const e of data.items || []){
+
+        const title = e.summary || "";
+
+        let start = e.start.date || e.start.dateTime;
+        let end = e.end.date || e.end.dateTime;
+
+        let s = new Date(start);
+        let en = new Date(end);
+
+        for(let d = new Date(s); d <= en; d.setDate(d.getDate()+1)){
+
+            let key = iso(d.getFullYear(), d.getMonth()+1, d.getDate());
+
+            if(!map[key]) map[key] = [];
+            map[key].push(title);
+        }
+    }
+
+    return map;
+}
+
+function buildCell(day, events){
+
+    let cls = "cell";
+
+    let text = `<div class="day">${day.getDate()}</div>`;
+
+    if(events){
+
+        for(let e of events.slice(0,2)){
+
+            let low = e.toLowerCase();
+
+            if(low.includes("vacances")) cls = "cell holiday";
+            else if(low.includes("exam") || low.includes("bac")) cls = "cell exam";
+            else cls = "cell event";
+
+            text += `<div>• ${e.length>28?e.slice(0,28)+"…":e}</div>`;
+        }
+    }
+
+    if(day.getDay()===0 || day.getDay()===6){
+        cls += " weekend";
+    }
+
+    return `<div class="${cls}">${text}</div>`;
+}
+
+function buildMonth(year,month,map){
+
+    const wrap = document.createElement("div");
+    wrap.className = "month";
+
+    wrap.innerHTML += `<div class="month-title">${MONTHS[month-1]} ${year}</div>`;
+
+    wrap.innerHTML += `
+    <div class="weekdays">
+    ${WEEKDAYS.map(d=>`<div>${d}</div>`).join("")}
+    </div>`;
+
+    let grid = document.createElement("div");
+    grid.className = "grid";
+
+    let first = new Date(year,month-1,1);
+    let offset = (first.getDay()+6)%7;
+
+    for(let i=0;i<offset;i++){
+        grid.innerHTML += `<div></div>`;
+    }
+
+    let days = new Date(year,month,0).getDate();
+
+    for(let d=1; d<=days; d++){
+
+        let date = new Date(year,month-1,d);
+        let key = iso(year,month,d);
+
+        grid.innerHTML += buildCell(date, map[key]);
+    }
+
+    wrap.appendChild(grid);
+    return wrap;
+}
+
+async function main(){
+
+    const app = document.getElementById("app");
+
+    const map = await fetchCalendar();
+
+    const months = [
+        [2026,7],[2026,8],[2026,9],[2026,10],[2026,11],[2026,12],
+        [2027,1],[2027,2],[2027,3],[2027,4],[2027,5],[2027,6],[2027,7]
+    ];
+
+    app.innerHTML = "";
+
+    for(const [y,m] of months){
+        app.appendChild(buildMonth(y,m,map));
+    }
+}
+
+main();
+
+</script>
+
+</body>
+</html>
