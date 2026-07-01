@@ -70,7 +70,9 @@ body {
 <script>
 
 const API_KEY = "AIzaSyD1YQdsRV9Kw5GYhbe56fanie1heFmCKXU";
+
 const CALENDAR_ID = "communication@lfijc.org";
+const HOLIDAY_CALENDAR_ID = "fr.ma#holiday@group.v.calendar.google.com";
 
 const MONTHS = [
 "Janvier","Février","Mars","Avril","Mai","Juin",
@@ -85,7 +87,11 @@ function iso(y,m,d){
     return `${y}-${pad(m)}-${pad(d)}`;
 }
 
-// FETCH GOOGLE CALENDAR
+//
+// =====================
+// FETCH SCHOOL CALENDAR
+// =====================
+//
 async function fetchCalendar(){
 
     const url =
@@ -100,20 +106,20 @@ async function fetchCalendar(){
 
         const title = e.summary || "";
 
-        // 🚫 remove working locations explicitly
+        // 🚫 remove working location events
         if (e.eventType === "workingLocation") continue;
-
-        // 🚫 remove "bureau" leaks
         if (title.toLowerCase().includes("bureau")) continue;
 
-        // ✅ ONLY real timed events
-        // (this is the KEY FIX)
-        if (!e.start || !e.start.dateTime) continue;
+        // ✅ keep BOTH timed and all-day events
+        let startRaw = e.start?.dateTime || e.start?.date;
+        let endRaw = e.end?.dateTime || e.end?.date;
 
-        let start = new Date(e.start.dateTime);
-        let end = new Date(e.end?.dateTime || e.start.dateTime);
+        if (!startRaw) continue;
 
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        let s = new Date(startRaw);
+        let en = new Date(endRaw || startRaw);
+
+        for (let d = new Date(s); d <= en; d.setDate(d.getDate() + 1)) {
 
             let key = iso(d.getFullYear(), d.getMonth() + 1, d.getDate());
 
@@ -125,6 +131,50 @@ async function fetchCalendar(){
     return map;
 }
 
+//
+// =====================
+// FETCH HOLIDAYS (FR-MA)
+// =====================
+//
+async function fetchHolidays(){
+
+    const url =
+`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(HOLIDAY_CALENDAR_ID)}/events?key=${API_KEY}&singleEvents=true&orderBy=startTime&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const map = {};
+
+    for (const e of data.items || []) {
+
+        const title = "🎉 " + (e.summary || "Férié");
+
+        let startRaw = e.start?.date || e.start?.dateTime;
+        let endRaw = e.end?.date || e.end?.dateTime;
+
+        if (!startRaw) continue;
+
+        let s = new Date(startRaw);
+        let en = new Date(endRaw || startRaw);
+
+        for (let d = new Date(s); d <= en; d.setDate(d.getDate() + 1)) {
+
+            let key = iso(d.getFullYear(), d.getMonth() + 1, d.getDate());
+
+            if (!map[key]) map[key] = [];
+            map[key].push(title);
+        }
+    }
+
+    return map;
+}
+
+//
+// =====================
+// CELL RENDERING
+// =====================
+//
 function buildCell(day, events){
 
     let cls = "cell";
@@ -151,6 +201,11 @@ function buildCell(day, events){
     return `<div class="${cls}">${text}</div>`;
 }
 
+//
+// =====================
+// MONTH BUILDER
+// =====================
+//
 function buildMonth(year, month, map){
 
     const wrap = document.createElement("div");
@@ -186,11 +241,25 @@ function buildMonth(year, month, map){
     return wrap;
 }
 
+//
+// =====================
+// MAIN
+// =====================
+//
 async function main(){
 
     const app = document.getElementById("app");
 
-    const map = await fetchCalendar();
+    const [schoolMap, holidayMap] = await Promise.all([
+        fetchCalendar(),
+        fetchHolidays()
+    ]);
+
+    // merge holidays into school calendar
+    for (const k in holidayMap) {
+        if (!schoolMap[k]) schoolMap[k] = [];
+        schoolMap[k].push(...holidayMap[k]);
+    }
 
     const months = [
         [2026,7],[2026,8],[2026,9],[2026,10],[2026,11],[2026,12],
@@ -200,7 +269,7 @@ async function main(){
     app.innerHTML = "";
 
     for (const [y,m] of months){
-        app.appendChild(buildMonth(y,m,map));
+        app.appendChild(buildMonth(y,m,schoolMap));
     }
 }
 
