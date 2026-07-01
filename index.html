@@ -96,21 +96,31 @@ async function fetchCalendar(){
 
     const map = {};
 
-    for(const e of data.items || []){
+    for (const e of data.items || []) {
+
+        // 🚫 REMOVE WORKING LOCATION EVENTS ("Bureau")
+        if (e.eventType === "workingLocation") continue;
 
         const title = e.summary || "";
 
-        let start = e.start.date || e.start.dateTime;
-        let end = e.end.date || e.end.dateTime;
+        // extra safety filters (Google sometimes leaks labels)
+        const lowTitle = title.toLowerCase();
+        if (lowTitle.includes("lieu de travail")) continue;
+        if (lowTitle.includes("bureau")) continue;
+
+        let start = e.start?.date || e.start?.dateTime;
+        let end = e.end?.date || e.end?.dateTime;
+
+        if (!start) continue;
 
         let s = new Date(start);
-        let en = new Date(end);
+        let en = new Date(end || start);
 
-        for(let d = new Date(s); d <= en; d.setDate(d.getDate()+1)){
+        for (let d = new Date(s); d <= en; d.setDate(d.getDate() + 1)) {
 
-            let key = iso(d.getFullYear(), d.getMonth()+1, d.getDate());
+            let key = iso(d.getFullYear(), d.getMonth() + 1, d.getDate());
 
-            if(!map[key]) map[key] = [];
+            if (!map[key]) map[key] = [];
             map[key].push(title);
         }
     }
@@ -121,31 +131,29 @@ async function fetchCalendar(){
 function buildCell(day, events){
 
     let cls = "cell";
-
     let text = `<div class="day">${day.getDate()}</div>`;
 
-    if(events){
-
-        for(let e of events.slice(0,2)){
+    if (events) {
+        for (let e of events.slice(0,2)) {
 
             let low = e.toLowerCase();
 
-            if(low.includes("vacances")) cls = "cell holiday";
-            else if(low.includes("exam") || low.includes("bac")) cls = "cell exam";
+            if (low.includes("vacances")) cls = "cell holiday";
+            else if (low.includes("exam") || low.includes("bac")) cls = "cell exam";
             else cls = "cell event";
 
-            text += `<div>• ${e.length>28?e.slice(0,28)+"…":e}</div>`;
+            text += `<div>• ${e.length > 28 ? e.slice(0,28) + "…" : e}</div>`;
         }
     }
 
-    if(day.getDay()===0 || day.getDay()===6){
+    if (day.getDay() === 0 || day.getDay() === 6) {
         cls += " weekend";
     }
 
     return `<div class="${cls}">${text}</div>`;
 }
 
-function buildMonth(year,month,map){
+function buildMonth(year, month, map){
 
     const wrap = document.createElement("div");
     wrap.className = "month";
@@ -160,19 +168,18 @@ function buildMonth(year,month,map){
     let grid = document.createElement("div");
     grid.className = "grid";
 
-    let first = new Date(year,month-1,1);
-    let offset = (first.getDay()+6)%7;
+    let first = new Date(year, month-1, 1);
+    let offset = (first.getDay() + 6) % 7;
 
-    for(let i=0;i<offset;i++){
+    for (let i=0; i<offset; i++){
         grid.innerHTML += `<div></div>`;
     }
 
-    let days = new Date(year,month,0).getDate();
+    let days = new Date(year, month, 0).getDate();
 
-    for(let d=1; d<=days; d++){
-
-        let date = new Date(year,month-1,d);
-        let key = iso(year,month,d);
+    for (let d=1; d<=days; d++){
+        let date = new Date(year, month-1, d);
+        let key = iso(year, month, d);
 
         grid.innerHTML += buildCell(date, map[key]);
     }
@@ -184,7 +191,6 @@ function buildMonth(year,month,map){
 async function main(){
 
     const app = document.getElementById("app");
-
     const map = await fetchCalendar();
 
     const months = [
@@ -194,7 +200,7 @@ async function main(){
 
     app.innerHTML = "";
 
-    for(const [y,m] of months){
+    for (const [y,m] of months){
         app.appendChild(buildMonth(y,m,map));
     }
 }
