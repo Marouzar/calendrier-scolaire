@@ -85,7 +85,7 @@ function iso(y,m,d){
     return `${y}-${pad(m)}-${pad(d)}`;
 }
 
-// FETCH GOOGLE CALENDAR DIRECTLY
+// FETCH GOOGLE CALENDAR
 async function fetchCalendar(){
 
     const url =
@@ -98,25 +98,22 @@ async function fetchCalendar(){
 
     for (const e of data.items || []) {
 
-        // 🚫 REMOVE WORKING LOCATION EVENTS ("Bureau")
-        if (e.eventType === "workingLocation") continue;
-
         const title = e.summary || "";
 
-        // extra safety filters (Google sometimes leaks labels)
-        const lowTitle = title.toLowerCase();
-        if (lowTitle.includes("lieu de travail")) continue;
-        if (lowTitle.includes("bureau")) continue;
+        // 🚫 remove working locations explicitly
+        if (e.eventType === "workingLocation") continue;
 
-        let start = e.start?.date || e.start?.dateTime;
-        let end = e.end?.date || e.end?.dateTime;
+        // 🚫 remove "bureau" leaks
+        if (title.toLowerCase().includes("bureau")) continue;
 
-        if (!start) continue;
+        // ✅ ONLY real timed events
+        // (this is the KEY FIX)
+        if (!e.start || !e.start.dateTime) continue;
 
-        let s = new Date(start);
-        let en = new Date(end || start);
+        let start = new Date(e.start.dateTime);
+        let end = new Date(e.end?.dateTime || e.start.dateTime);
 
-        for (let d = new Date(s); d <= en; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
 
             let key = iso(d.getFullYear(), d.getMonth() + 1, d.getDate());
 
@@ -134,6 +131,7 @@ function buildCell(day, events){
     let text = `<div class="day">${day.getDate()}</div>`;
 
     if (events) {
+
         for (let e of events.slice(0,2)) {
 
             let low = e.toLowerCase();
@@ -191,6 +189,7 @@ function buildMonth(year, month, map){
 async function main(){
 
     const app = document.getElementById("app");
+
     const map = await fetchCalendar();
 
     const months = [
