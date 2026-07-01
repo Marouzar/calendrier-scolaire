@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <title>Calendrier Scolaire</title>
 
+<!-- 📱 Mobile support -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- 🔗 Share preview (WhatsApp / Discord / iMessage) -->
+<meta property="og:title" content="Calendrier Scolaire">
+<meta property="og:description" content="Calendrier scolaire automatique synchronisé avec Google Calendar">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://marouzar.github.io/school-calendar/">
+
+<!-- 🧹 Prevent cached old versions -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <style>
 body {
     font-family: Arial;
@@ -65,7 +79,7 @@ body {
 
 <body>
 
-<div id="app">Chargement...</div>
+<div id="app">Chargement du calendrier...</div>
 
 <script>
 
@@ -87,15 +101,13 @@ function iso(y,m,d){
     return `${y}-${pad(m)}-${pad(d)}`;
 }
 
-//
-// =====================
-// FETCH SCHOOL CALENDAR
-// =====================
-//
+/* =========================
+   SCHOOL CALENDAR
+========================= */
 async function fetchCalendar(){
 
     const url =
-`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${API_KEY}&singleEvents=true&orderBy=startTime&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
+`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${API_KEY}&singleEvents=true&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -106,11 +118,9 @@ async function fetchCalendar(){
 
         const title = e.summary || "";
 
-        // 🚫 remove working location events
         if (e.eventType === "workingLocation") continue;
         if (title.toLowerCase().includes("bureau")) continue;
 
-        // ✅ keep BOTH timed and all-day events
         let startRaw = e.start?.dateTime || e.start?.date;
         let endRaw = e.end?.dateTime || e.end?.date;
 
@@ -121,7 +131,7 @@ async function fetchCalendar(){
 
         for (let d = new Date(s); d <= en; d.setDate(d.getDate() + 1)) {
 
-            let key = iso(d.getFullYear(), d.getMonth() + 1, d.getDate());
+            let key = iso(d.getFullYear(), d.getMonth()+1, d.getDate());
 
             if (!map[key]) map[key] = [];
             map[key].push(title);
@@ -131,15 +141,13 @@ async function fetchCalendar(){
     return map;
 }
 
-//
-// =====================
-// FETCH HOLIDAYS (FR-MA)
-// =====================
-//
+/* =========================
+   HOLIDAYS
+========================= */
 async function fetchHolidays(){
 
     const url =
-`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(HOLIDAY_CALENDAR_ID)}/events?key=${API_KEY}&singleEvents=true&orderBy=startTime&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
+`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(HOLIDAY_CALENDAR_ID)}/events?key=${API_KEY}&singleEvents=true&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -160,7 +168,7 @@ async function fetchHolidays(){
 
         for (let d = new Date(s); d <= en; d.setDate(d.getDate() + 1)) {
 
-            let key = iso(d.getFullYear(), d.getMonth() + 1, d.getDate());
+            let key = iso(d.getFullYear(), d.getMonth()+1, d.getDate());
 
             if (!map[key]) map[key] = [];
             map[key].push(title);
@@ -170,11 +178,9 @@ async function fetchHolidays(){
     return map;
 }
 
-//
-// =====================
-// CELL RENDERING
-// =====================
-//
+/* =========================
+   UI
+========================= */
 function buildCell(day, events){
 
     let cls = "cell";
@@ -190,7 +196,7 @@ function buildCell(day, events){
             else if (low.includes("exam") || low.includes("bac")) cls = "cell exam";
             else cls = "cell event";
 
-            text += `<div>• ${e.length > 28 ? e.slice(0,28) + "…" : e}</div>`;
+            text += `<div>• ${e.length > 28 ? e.slice(0,28)+"…" : e}</div>`;
         }
     }
 
@@ -201,11 +207,6 @@ function buildCell(day, events){
     return `<div class="${cls}">${text}</div>`;
 }
 
-//
-// =====================
-// MONTH BUILDER
-// =====================
-//
 function buildMonth(year, month, map){
 
     const wrap = document.createElement("div");
@@ -222,9 +223,9 @@ function buildMonth(year, month, map){
     grid.className = "grid";
 
     let first = new Date(year, month-1, 1);
-    let offset = (first.getDay() + 6) % 7;
+    let offset = (first.getDay()+6)%7;
 
-    for (let i=0; i<offset; i++){
+    for (let i=0;i<offset;i++){
         grid.innerHTML += `<div></div>`;
     }
 
@@ -241,11 +242,9 @@ function buildMonth(year, month, map){
     return wrap;
 }
 
-//
-// =====================
-// MAIN
-// =====================
-//
+/* =========================
+   MAIN
+========================= */
 async function main(){
 
     const app = document.getElementById("app");
@@ -255,7 +254,6 @@ async function main(){
         fetchHolidays()
     ]);
 
-    // merge holidays into school calendar
     for (const k in holidayMap) {
         if (!schoolMap[k]) schoolMap[k] = [];
         schoolMap[k].push(...holidayMap[k]);
