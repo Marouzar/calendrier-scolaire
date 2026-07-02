@@ -1,77 +1,62 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
+
 <meta charset="UTF-8">
 <title>Calendrier Scolaire 2026–2027</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
 
 @page {
     size: A4 landscape;
-    margin: 10mm;
-}
-
-* {
-    box-sizing: border-box;
+    margin: 8mm;
 }
 
 body {
     margin: 0;
-    font-family: "Inter", sans-serif;
+    font-family: Inter, sans-serif;
     background: white;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
-#page {
+/* ================= PAGE ================= */
+
+.page {
+    page-break-after: always;
     display: grid;
-    grid-template-columns: 4fr 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 14px;
-    height: 100vh;
-    padding: 10px;
+    grid-template-columns: 5fr 0.8fr;
+    gap: 10px;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 
 header {
-    grid-column: 1 / span 2;
+    grid-column: 1 / -1;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid #1f3b73;
-    padding-bottom: 10px;
+    border-bottom: 2px solid #1f3b73;
+    padding-bottom: 6px;
 }
 
 header h1 {
     margin: 0;
-    font-size: 22px;
+    font-size: 18px;
     color: #1f3b73;
 }
 
 header h2 {
-    margin: 4px 0 0;
-    font-size: 13px;
-    font-weight: 400;
+    margin: 2px 0 0;
+    font-size: 12px;
     color: #666;
 }
 
-/* LOGO */
-
 .logo {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 55px;
+    height: 55px;
 }
 
 .logo img {
@@ -80,120 +65,111 @@ header h2 {
     object-fit: contain;
 }
 
-/* CALENDAR GRID */
+/* ================= CALENDAR ================= */
 
-#calendar {
+.calendar {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    align-content: start;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-items: stretch;
 }
 
-/* MONTH */
+/* ================= MONTH ================= */
 
 .month {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
     overflow: hidden;
-    background: white;
+    display: flex;
+    flex-direction: column;
 }
 
 .month-title {
     background: #1f3b73;
     color: white;
     text-align: center;
-    padding: 5px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    padding: 4px;
 }
 
 .weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: #f5f7fb;
-    font-size: 8px;
+    font-size: 7px;
     text-align: center;
-    padding: 3px 0;
-    color: #666;
+    background: #f5f6fa;
+    padding: 2px 0;
 }
 
 .days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    flex: 1;
 }
 
 .day {
-    min-height: 28px;
     border: 1px solid #f0f0f0;
-    padding: 2px;
-    font-size: 8px;
+    min-height: 32px;
+    padding: 1px;
+    font-size: 7px;
+    display: flex;
+    flex-direction: column;
 }
 
-.day-number {
-    font-size: 8px;
+/* day number */
+.num {
+    font-size: 7px;
     font-weight: 600;
+    color: #333;
 }
 
-/* EVENTS */
+/* ================= EVENTS (IMPORTANT FIX HERE) ================= */
 
 .event {
     font-size: 6.5px;
-    margin-top: 1px;
+    line-height: 1.15;
+
+    /* KEY CHANGE: allow wrapping */
+    white-space: normal;
+    word-break: break-word;
+
     padding: 1px 2px;
+    margin-top: 1px;
     border-radius: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
+/* COLORS */
 .normal { background: #dbeafe; }
 .holiday { background: #fff4c2; }
 .exam { background: #ffd6d6; }
 .official { background: #d7f5d7; }
 
-/* SIDEBAR */
+/* ================= SIDEBAR ================= */
 
 aside {
-    border-left: 2px solid #e5e5e5;
-    padding-left: 10px;
-    display: flex;
-    flex-direction: column;
+    border-left: 1px solid #e5e5e5;
+    padding-left: 6px;
+    font-size: 10px;
 }
 
-aside h3 {
-    margin: 0 0 10px;
-    font-size: 14px;
-    color: #1f3b73;
-}
-
-.legend {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 11px;
-}
-
-.legend-item {
+.legend div {
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .box {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
 }
 
-.normalBox { background: #dbeafe; }
-.holidayBox { background: #fff4c2; }
-.examBox { background: #ffd6d6; }
-.officialBox { background: #d7f5d7; }
-
 .footer {
-    margin-top: auto;
-    font-size: 9px;
-    color: #888;
+    position: absolute;
+    bottom: 10px;
+    font-size: 8px;
+    color: #777;
 }
 
 </style>
@@ -202,170 +178,209 @@ aside h3 {
 
 <body>
 
-<div id="page">
-
-<header>
-    <div>
-        <h1>CALENDRIER SCOLAIRE</h1>
-        <h2>LFI Jean Charcot • 2026–2027</h2>
-    </div>
-
-    <div class="logo">
-        <img src="Logo Charcot.png" alt="Logo">
-    </div>
-</header>
-
-<div id="calendar"></div>
-
-<aside>
-    <h3>Légende</h3>
-
-    <div class="legend">
-        <div class="legend-item"><div class="box normalBox"></div>Événements</div>
-        <div class="legend-item"><div class="box holidayBox"></div>Vacances</div>
-        <div class="legend-item"><div class="box examBox"></div>Examens</div>
-        <div class="legend-item"><div class="box officialBox"></div>Fériés</div>
-    </div>
-
-    <div class="footer">
-        Généré automatiquement depuis Google Calendar<br><br>
-        https://marouzar.github.io/school-calendar/
-    </div>
-</aside>
-
-</div>
+<div id="root"></div>
 
 <script>
 
-/* API */
+/* ================= CONFIG ================= */
+
 const API_KEY = "AIzaSyD1YQdsRV9Kw5GYhbe56fanie1heFmCKXU";
 
 const CALENDAR_ID = "communication@lfijc.org";
 const HOLIDAY_ID = "fr.ma#holiday@group.v.calendar.google.com";
+const MONTHS = [
+"Janvier","Février","Mars","Avril","Mai","Juin",
+"Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+];
 
-/* HELPERS */
+/* ================= HELPERS ================= */
 
 function pad(n){ return String(n).padStart(2,"0"); }
 function iso(y,m,d){ return `${y}-${pad(m)}-${pad(d)}`; }
 
-/* FETCH */
+/* ================= SAFE DATE PARSER ================= */
 
-async function fetchCalendar(id){
+function getRange(e){
 
-    const url =
-`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events?key=${API_KEY}&singleEvents=true&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T23:59:59Z&maxResults=2500`;
+let startRaw = e.start?.date || e.start?.dateTime;
+let endRaw = e.end?.date || e.end?.dateTime;
 
-    const res = await fetch(url);
-    const data = await res.json();
+if(!startRaw) return null;
 
-    const map = {};
+let start = new Date(startRaw);
+let end = new Date(endRaw || startRaw);
 
-    for(const e of data.items || []){
-
-        const title = e.summary || "";
-
-        if(title.toLowerCase().includes("bureau")) continue;
-
-        let start = e.start?.dateTime || e.start?.date;
-        let end = e.end?.dateTime || e.end?.date;
-
-        if(!start) continue;
-
-        let s = new Date(start);
-        let en = new Date(end || start);
-
-        for(let d = new Date(s); d <= en; d.setDate(d.getDate()+1)){
-
-            const key = iso(d.getFullYear(), d.getMonth()+1, d.getDate());
-
-            if(!map[key]) map[key] = [];
-
-            map[key].push({
-                title,
-                type: id === HOLIDAY_ID ? "official"
-                      : title.toLowerCase().includes("vacance") ? "holiday"
-                      : title.toLowerCase().includes("exam") ? "exam"
-                      : "normal"
-            });
-
-        }
-    }
-
-    return map;
+/* FIX Google exclusive end date */
+if(e.start?.date && e.end?.date){
+    end.setDate(end.getDate() - 1);
 }
 
-/* MERGE */
+return {start, end};
+}
+
+/* ================= FETCH ================= */
+
+async function fetchCalendar(id, isHoliday=false){
+
+const url =
+`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events?key=${API_KEY}&singleEvents=true&timeMin=2026-07-01T00:00:00Z&timeMax=2027-07-31T00:00:00Z&maxResults=2500`;
+
+const res = await fetch(url);
+const data = await res.json();
+
+const map = {};
+
+for(const e of data.items || []){
+
+const title = e.summary || "";
+if(title.toLowerCase().includes("bureau")) continue;
+
+const range = getRange(e);
+if(!range) continue;
+
+for(let d=new Date(range.start); d<=range.end; d.setDate(d.getDate()+1)){
+
+const key = iso(d.getFullYear(), d.getMonth()+1, d.getDate());
+
+if(!map[key]) map[key]=[];
+
+map[key].push({
+    title,
+    type: isHoliday ? "official"
+         : title.toLowerCase().includes("vacance") ? "holiday"
+         : title.toLowerCase().includes("exam") ? "exam"
+         : "normal"
+});
+
+}
+
+}
+
+return map;
+}
+
+/* ================= MERGE ================= */
 
 function merge(a,b){
-
-    for(const k in b){
-        if(!a[k]) a[k]=[];
-        a[k].push(...b[k]);
-    }
-
-    return a;
+for(const k in b){
+if(!a[k]) a[k]=[];
+a[k].push(...b[k]);
+}
+return a;
 }
 
-/* RENDER MONTH */
+/* ================= MONTH ================= */
 
 function buildMonth(y,m,data){
 
-    const month = document.createElement("div");
-    month.className = "month";
+const div = document.createElement("div");
+div.className="month";
 
-    const daysInMonth = new Date(y,m,0).getDate();
+const days = new Date(y,m,0).getDate();
 
-    let html = `
-        <div class="month-title">${y} - ${m}</div>
-        <div class="weekdays">
-            <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
-        </div>
-        <div class="days">
-    `;
+let html = `
+<div class="month-title">${MONTHS[m-1]} ${y}</div>
+<div class="weekdays">
+<div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+</div>
+<div class="days">
+`;
 
-    for(let i=1;i<=daysInMonth;i++){
+for(let i=1;i<=days;i++){
 
-        const key = iso(y,m,i);
-        const events = data[key] || [];
+const key = iso(y,m,i);
+const events = data[key] || [];
 
-        html += `<div class="day">
-            <div class="day-number">${i}</div>`;
+html += `<div class="day">
+<div class="num">${i}</div>`;
 
-        for(const e of events.slice(0,2)){
-
-            html += `<div class="event ${e.type}">${e.title}</div>`;
-        }
-
-        html += `</div>`;
-    }
-
-    html += `</div>`;
-
-    month.innerHTML = html;
-    return month;
+for(const e of events.slice(0,3)){
+html += `<div class="event ${e.type}">${e.title}</div>`;
 }
 
-/* MAIN */
+html += `</div>`;
+}
+
+html += `</div>`;
+
+div.innerHTML = html;
+return div;
+}
+
+/* ================= PAGE ================= */
+
+function page(months,data){
+
+const p = document.createElement("div");
+p.className="page";
+
+/* HEADER */
+p.innerHTML = `
+<header>
+<div>
+<h1>CALENDRIER SCOLAIRE</h1>
+<h2>LFI Jean Charcot 2026–2027</h2>
+</div>
+<div class="logo">
+<img src="Logo Charcot.png">
+</div>
+</header>
+`;
+
+/* CALENDAR */
+const cal = document.createElement("div");
+cal.className="calendar";
+
+months.forEach(([y,m])=>{
+cal.appendChild(buildMonth(y,m,data));
+});
+
+p.appendChild(cal);
+
+/* SIDEBAR */
+const aside = document.createElement("aside");
+
+aside.innerHTML = `
+<div class="legend">
+<div><div class="box" style="background:#dbeafe"></div>Événements</div>
+<div><div class="box" style="background:#fff4c2"></div>Vacances</div>
+<div><div class="box" style="background:#ffd6d6"></div>Examens</div>
+<div><div class="box" style="background:#d7f5d7"></div>Fériés</div>
+</div>
+
+<div class="footer">
+https://marouzar.github.io/school-calendar/
+</div>
+`;
+
+p.appendChild(aside);
+
+return p;
+}
+
+/* ================= MAIN ================= */
 
 async function main(){
 
-    const school = await fetchCalendar(CALENDAR_ID);
-    const holidays = await fetchCalendar(HOLIDAY_ID);
+const school = await fetchCalendar(CALENDAR_ID,false);
+const holidays = await fetchCalendar(HOLIDAY_ID,true);
 
-    const data = merge(school, holidays);
+const data = merge(school,holidays);
 
-    const months = [
-        [2026,7],[2026,8],[2026,9],[2026,10],
-        [2026,11],[2026,12],[2027,1],[2027,2],
-        [2027,3],[2027,4],[2027,5],[2027,6],
-        [2027,7]
-    ];
+const root = document.getElementById("root");
 
-    const container = document.getElementById("calendar");
+/* PAGE 1 */
+root.appendChild(page([
+[2026,7],[2026,8],[2026,9],
+[2026,10],[2026,11],[2026,12]
+],data));
 
-    for(const [y,m] of months){
-        container.appendChild(buildMonth(y,m,data));
-    }
+/* PAGE 2 */
+root.appendChild(page([
+[2027,1],[2027,2],[2027,3],
+[2027,4],[2027,5],[2027,6]
+],data));
+
 }
 
 main();
